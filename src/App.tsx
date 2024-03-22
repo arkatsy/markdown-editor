@@ -63,7 +63,6 @@ if (!isValidFileId(activeFileId)) {
   // If there is no active file id, we first check if indeed there are no files in the db.
   // If there are then we should grab the first one from there and set that as the active file id.
   db.getFirstFile().then((file) => {
-    console.log("file", file);
     if (file) {
       useActiveFileId.setState((prev) => ({ ...prev, activeFileId: file.id }));
     } else {
@@ -95,7 +94,6 @@ function Body() {
     // TODO: `shouldSave` is a little misleading. It's used to prevent initial overwriting when we haven't gotten any file content yet.
     shouldSave: false, 
   });
-  console.log(fileContents);
 
   useEffect(() => {
     if (isValidFileId(activeFileId) && fileContents) {
