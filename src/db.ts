@@ -28,6 +28,10 @@ class AppDB extends Dexie {
   async getFirstFile() {
     return await this.files.get(1);
   }
+
+  async getFile(id: number) {
+    return await this.files.get(id);
+  }
 }
 
 export const db = new AppDB();
