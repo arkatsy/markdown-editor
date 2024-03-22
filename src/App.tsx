@@ -63,22 +63,28 @@ if (activeFileId === NO_FILE_ID) {
 }
 
 function Body() {
-  const [md, setMd] = useState("");
   const { activeFileId } = useActiveFileId();
   const fileContents = useLiveQuery(() => db.files.get(activeFileId), [activeFileId]);
   const [loadingFile, setLoadingFile] = useState(isValidFileId(activeFileId) || !fileContents);
+  const [md, setMd] = useState({
+    content: "",
+    shouldSave: false,
+  });
 
   useEffect(() => {
     if (isValidFileId(activeFileId) && fileContents) {
       setLoadingFile(false);
+      setMd({ content: fileContents.content, shouldSave: true });
     }
   }, [activeFileId, fileContents]);
 
-  const onMdChange = (val: string) => setMd(val);
+  const onMdChange = (val: string) => setMd({ content: val, shouldSave: true });
 
   useDebouncedEffect(
     async () => {
-      await db.updateFileContent(activeFileId, md);
+      if (md.shouldSave) {
+        await db.updateFileContent(activeFileId, md.content);
+      }
     },
     [md],
     SAVE_ON_CHANGE_DELAY,
@@ -94,7 +100,7 @@ function Body() {
           height={`${editorHeight}px`}
           maxHeight={`${editorHeight}px`}
           theme={githubDark}
-          value={md}
+          value={md.content}
           autoFocus
           onChange={onMdChange}
           extensions={codeMirrorExtensions}
@@ -103,7 +109,7 @@ function Body() {
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={50} minSize={15} className="h-[calc(100svh-4rem)]">
-        <MarkdownPreview className="h-full overflow-auto px-8 py-4 text-base" source={md} />
+        <MarkdownPreview className="h-full overflow-auto px-8 py-4 text-base" source={md.content} />
       </ResizablePanel>
     </ResizablePanelGroup>
   );
