@@ -2,11 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { useToast } from "@/components/ui/use-toast";
+import { toast, useToast } from "@/components/ui/use-toast";
 import { File, db } from "@/db";
 import { useDebouncedEffect } from "@/use-debounced-effect";
 import { markdown } from "@codemirror/lang-markdown";
-import { CheckIcon, Cross1Icon, HamburgerMenuIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
+import { CheckIcon, Cross1Icon, HamburgerMenuIcon, Pencil1Icon, TrashIcon, DownloadIcon } from "@radix-ui/react-icons";
 import { githubDark } from "@uiw/codemirror-theme-github";
 import CodeMirror from "@uiw/react-codemirror";
 import MarkdownPreview from "@uiw/react-markdown-preview";
@@ -26,19 +26,58 @@ export default function App() {
 
 function Header() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const activeFileId = useActiveFileId((state) => state.activeFileId);
+
+  const downloadActiveFile = useCallback(async () => {
+    const file = await db.getFile(activeFileId);
+    if (!file) {
+      toast({
+        title: "No file to download",
+      });
+      return;
+    }
+
+    const blob = new Blob([file.content], { type: "text/markdown" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${file.name}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }, [activeFileId]);
+
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.key === "s") {
+        e.preventDefault();
+        downloadActiveFile();
+      }
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [downloadActiveFile]);
 
   return (
-    <header className="flex min-h-16 items-center px-4">
-      <MenuSheet open={menuOpen} onOpenChange={setMenuOpen}>
-        <MenuSheetButton>
-          <HamburgerMenuIcon className="size-6" />
-        </MenuSheetButton>
-      </MenuSheet>
-      <h2 className="ml-4">
-        <a href="/" className="text-xl font-semibold uppercase tracking-widest">
-          MARKDOWN
-        </a>
-      </h2>
+    <header className="flex min-h-16 items-center justify-between px-4">
+      <div className="flex">
+        <MenuSheet open={menuOpen} onOpenChange={setMenuOpen}>
+          <MenuSheetButton>
+            <HamburgerMenuIcon className="size-6" />
+          </MenuSheetButton>
+        </MenuSheet>
+        <h2 className="ml-4">
+          <a href="/" className="text-xl font-semibold uppercase tracking-widest">
+            MARKDOWN
+          </a>
+        </h2>
+      </div>
+      <Button onClick={downloadActiveFile} size="icon" className="mr-4 p-1">
+        <DownloadIcon className="size-6" />
+      </Button>
     </header>
   );
 }
