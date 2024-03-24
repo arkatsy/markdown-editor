@@ -1,20 +1,19 @@
-import { ComponentProps, useCallback, useEffect, useRef, useState } from "react";
-import CodeMirror from "@uiw/react-codemirror";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import { useToast } from "@/components/ui/use-toast";
+import { File, db } from "@/db";
+import { useDebouncedEffect } from "@/use-debounced-effect";
 import { markdown } from "@codemirror/lang-markdown";
-import MarkdownPreview from "@uiw/react-markdown-preview";
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "./components/ui/resizable";
+import { CheckIcon, Cross1Icon, HamburgerMenuIcon, Pencil1Icon, TrashIcon } from "@radix-ui/react-icons";
 import { githubDark } from "@uiw/codemirror-theme-github";
-import { File, db } from "./db";
-import { useDebouncedEffect } from "./use-debounced-effect";
+import CodeMirror from "@uiw/react-codemirror";
+import MarkdownPreview from "@uiw/react-markdown-preview";
+import { useLiveQuery } from "dexie-react-hooks";
+import { ComponentProps, useCallback, useEffect, useRef, useState } from "react";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { useLiveQuery } from "dexie-react-hooks";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./components/ui/sheet";
-import { HamburgerMenuIcon, TrashIcon, Pencil1Icon, CheckIcon, Cross1Icon } from "@radix-ui/react-icons";
-import { Button } from "./components/ui/button";
-import { useToast } from "./components/ui/use-toast";
-import { Input } from "./components/ui/input";
-import { cn } from "./lib/utils";
 
 export default function App() {
   return (
@@ -192,10 +191,7 @@ function MenuFileButton({ file, onDelete, onRename, onOpen }: MenuFileButtonProp
       <Button
         variant={isActive ? "secondary" : "ghost"}
         onClick={onOpenClick}
-        className={cn(
-          "w-full justify-start group-hover:text-github-900 peer-hover:bg-github-100 dark:group-hover:bg-github-900 dark:group-hover:text-github-100",
-          // isActive && buttonVariants({variant: "secondary", className: "justify-start"}),
-        )}
+        className="w-full justify-start group-hover:text-github-900 peer-hover:bg-github-100 dark:group-hover:bg-github-900 dark:group-hover:text-github-100"
       >
         {file.name}
       </Button>
@@ -279,7 +275,7 @@ if (!isValidFileId(activeFileId)) {
 function Body() {
   const { activeFileId } = useActiveFileId();
   const fileContents = useLiveQuery(() => db.getFile(activeFileId), [activeFileId]);
-  const [loadingFile, setLoadingFile] = useState(isValidFileId(activeFileId) || !fileContents);
+  const [, setLoadingFile] = useState(isValidFileId(activeFileId) || !fileContents);
   const [md, setMd] = useState({
     content: "",
     // TODO: `shouldSave` is a little misleading. It's used to prevent initial overwriting when we haven't gotten any file content yet.
@@ -304,8 +300,6 @@ function Body() {
     [md],
     SAVE_ON_CHANGE_DELAY,
   );
-
-  // if (loadingFile) return <div>Loading...</div>;
 
   return (
     <ResizablePanelGroup direction="horizontal" autoSaveId="resizer-save">
