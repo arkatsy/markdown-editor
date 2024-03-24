@@ -17,7 +17,7 @@ class AppDB extends Dexie {
   }
 
   async createFile() {
-    const id = await this.files.add({ name: "Untitled", content: "# Untitled" });
+    const id = await this.files.add({ name: "Untitled", content: "# New File" });
     return id;
   }
 
@@ -26,11 +26,23 @@ class AppDB extends Dexie {
   }
 
   async getFirstFile() {
-    return await this.files.get(1);
+    return await this.files.toCollection().first();
   }
 
   async getFile(id: number) {
     return await this.files.get(id);
+  }
+
+  async getAllFiles() {
+    return await this.files.toArray();
+  }
+
+  async deleteFile(id: number) {
+    await this.files.delete(id);
+  }
+
+  async updateFileName(id: number, name: string) {
+    await this.files.update(id, { name });
   }
 }
 
